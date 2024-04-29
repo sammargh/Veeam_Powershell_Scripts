@@ -54,6 +54,6 @@ $appId=$app.appId
 $secret=$cred.secretText
 
 # Output the result
-Write-Output "AzureAd:ClientId $appId"
+Write-Output "AzureAd:AppId $appId"
 Write-Output "AzureAd:ClientSecret $secret"
 Write-Output "AzureAd:TenantId $($(Get-MgContext).TenantId)"
