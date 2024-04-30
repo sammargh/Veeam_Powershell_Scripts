@@ -44,16 +44,26 @@ $requiredExchangeAccess = (@{
   "resourceAppId" = "00000002-0000-0ff1-ce00-000000000000"
 })
 
-# create the application
-$app = New-MgApplication -DisplayName "Veeam Microsoft 365 Backup" -RequiredResourceAccess $requiredGraphAccess,$requiredExchangeAccess
+# create a KeyCredential from the provided certificate
+$certificate = Get-PfxCertificate -Filepath $args[0]
+$x509cert = New-Object -TypeName System.Security.Cryptography.X509Certificates.X509Certificate2($certificate)
 
-# create client secret
-$cred = Add-MgApplicationPassword -ApplicationId $app.id
+$keyCredential = @{
+  Type='AsymmetricX509Cert';
+  Usage='Verify';
+  Key=$x509cert.RawData
+}
 
+Write-Output "Now Registering the Application"
+$app = New-MgApplication  -DisplayName "Veeam Microsoft 365 Backup" `
+                          -RequiredResourceAccess $requiredGraphAccess,$requiredExchangeAccess `
+                          -KeyCredentials $keyCredential `
+                          -PublicClient @{ `
+                            RedirectUris = "http://localhost" `
+                          } `
+                         -DefaultRedirectUri http://localhost
 $appId=$app.appId
-$secret=$cred.secretText
 
-# Output the result
+Write-Output "Application registered. Please login to the Microsoft Entra admin center and consent to the API privileges required for Veeam to backup. The application will also need to be added an assignment to the Global Reader Administrative Role."
 Write-Output "AzureAd:AppId $appId"
-Write-Output "AzureAd:ClientSecret $secret"
 Write-Output "AzureAd:TenantId $($(Get-MgContext).TenantId)"
